@@ -198,11 +198,6 @@ class CarbinWebscraper:
             df_autoChek = self.scrapeAutoChek(70)
             df_betaCars = self.betaCars(2)
 
-            # Add a column to each DataFrame to identify the source
-            # df_cars45['Source'] = 'Cars45'
-            # df_autoChek['Source'] = 'AutoChek'
-            # df_betaCars['Source'] = 'BetaCars'
-
             # Concatenate the individual DataFrames into one
             combinedDf = pd.concat([df_cars45, df_autoChek, df_betaCars], ignore_index=True,axis=0)
             return combinedDf
