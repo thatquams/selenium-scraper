@@ -42,7 +42,10 @@ class CarbinWebscraper:
                         carModel = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text.split()[1]
                         carCondition = self.driver.find_element(By.XPATH,"//div[@class='main-details__tags flex wrap']/span[1]").text
                         transmissionType = self.driver.find_element(By.XPATH,"//div[@class='main-details__tags flex wrap']/span[2]").text
+                        fuelType = self.driver.find_element(By.XPATH, "//img[contains(@src, '/_ipx/_/images/diesel.png')]/../span[@class='tab-content__svg__title']").text.strip()
+                        # engineSize = self.driver.find_element(By.XPATH, "//div[@itemprop = 'description']/div[7]/p")
                         carMileage = self.driver.find_element(by=By.XPATH,value="//div[@class='main-details__tags flex wrap']/span[3]").text
+                        carColour = self.driver.find_element(By.XPATH, "//div[@itemprop = 'description']/div[4]/p")
                         # carBrand = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text.sp;lit()[0]
 
                         yearOfManufacture = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text
@@ -59,7 +62,7 @@ class CarbinWebscraper:
                             "Car Id" : carId, "Scraped Date":dateScraped,
                             "Brand": carBrand, "Model": carModel,
                             "Condition": carCondition, "Year": carYear, "Transmission": transmissionType,
-                            "Mileage":carMileage, "Price": Price}
+                            "Fuel":fuelType, "Colour":carColour, "Mileage":carMileage, "Price": Price}
 
                         # Append all car details
                         self.allCars45Details.append(CarDetails)
@@ -117,13 +120,15 @@ class CarbinWebscraper:
 
                         otherCarFeatures = self.driver.find_elements(By.XPATH, "//p[@class='MuiTypography-root MuiTypography-body1 css-1pldev7']")
                         carTransmission = otherCarFeatures[1].text
+                        fuelType = otherCarFeatures[2].text
+                        carColour = otherCarFeatures[4].text
                         carMileage = self.driver.find_element(By.XPATH, "//*[@class='MuiGrid-root MuiGrid-container MuiGrid-spacing-xs-1 css-tuxzvu']").text.split('\n')[1]
 
                         carDetails = {
                             "Car Id":carId, "Scraped Date":dateScraped,
                             "Brand": carBrand, "Model": carModel, "Condition": Condition,
-                            "Year": yearOfManufacture, "Transmission": carTransmission,
-                            "Mileage":carMileage, "Price": Price
+                            "Year": yearOfManufacture, "Transmission": carTransmission, "Fuel":fuelType,
+                            "Colour":carColour, "Mileage":carMileage, "Price": Price
                         }
 
 
@@ -159,7 +164,7 @@ class CarbinWebscraper:
     def betaCars(self, maxPageNumber):
 
         try:
-            betaCarsWebsite = "https://www.betacar.ng/foreign-used-car#/pageSize=32&orderBy=10&pageNumber=1"
+            betaCarsWebsite = "https://www.betacar.ng/all-used-cars#/pageSize=32&viewMode=grid&orderBy=10&pageNumber=1"
             currentPageNumber = 1
 
             while currentPageNumber <= maxPageNumber:
@@ -173,25 +178,31 @@ class CarbinWebscraper:
                     self.driver.get(href)
 
                     try:
-
+                        carId = href
                         dateScraped = date.today()
+                        carTitle = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text
                         carBrand = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text.split(maxsplit=6)[1]
                         carModel = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text.split(maxsplit=6)[2]
                         Year = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text.split(maxsplit=6)[0]
-                        Price = self.driver.find_element(by=By.XPATH, value="//div[@class='product-price']/span[1]").text.strip("₦ ")
-                        condition = "Foreign Used"
+                        carCondition = lambda car : "Local Used" if ("Registered" in car) else "Foreign Used"
+                        
                         otherFeatures = self.driver.find_elements(by=By.XPATH, value="//tr/td[2]")
                         res = [feat.text for feat in otherFeatures]
+                        
+                        fuelType = res[1].split("(")[1].strip(")")
                         carTransmission = res[2]
                         carMileage = res[3]
-                        carId = f"BCars{carMileage[:3].replace(',','')}"
+                        carColour = res[6]
+                        
+                        Price = self.driver.find_element(by=By.XPATH, value="//div[@class='product-price']/span[1]").text.strip("₦ ")
+                        # carId = f"BCars{carMileage[:3].replace(',','')}"
 
 
                         carDetails = {
                             "Car Id":carId, "Scraped Date" : dateScraped,
-                            "Brand": carBrand, "Model": carModel, "Condition": condition,
-                            "Year": Year, "Transmission": carTransmission,
-                            "Mileage": carMileage, "Price": Price
+                            "Brand": carBrand, "Model": carModel, "Condition": carCondition(carTitle),
+                            "Year": Year, "Transmission": carTransmission, "Fuel":fuelType,
+                            "Colour":carColour, "Mileage": carMileage, "Price": Price
                         }
 
                         self.betaCarsDetails.append(carDetails)
@@ -223,16 +234,14 @@ class CarbinWebscraper:
     def concatenateDataframes(self):
         try:
             # Call each scraping method to get the individual DataFrames
-            df_cars45 = self.scrapeCars45(99)
-            df_autoChek = self.scrapeAutoChek(60)
-            df_betaCars = self.betaCars(5)
+            df_cars45 = self.scrapeCars45(100)
+            df_autoChek = self.scrapeAutoChek(100)
+            df_betaCars = self.betaCars(20)
 
             # Concatenate the individual DataFrames into one
-            # df_cars45.to_json("df_cars45.json", orient="records", lines=True)
-            # df_autoChek.to_json("df_autoChek.json", orient="records", lines=True)
-            # df_betaCars.to_json("df_betaCars.json", orient="records", lines=True)
+
             combinedDf = pd.concat([df_cars45, df_autoChek, df_betaCars], ignore_index=True,axis=0)
-            combinedDf.to_json("scrappedCars.json", orient="records", lines=True)
+            combinedDf.to_csv("scrappedCars.csv")
             return combinedDf
 
         except Exception as e:
