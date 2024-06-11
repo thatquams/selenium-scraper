@@ -35,8 +35,7 @@ class CarbinWebscraper:
 
 
                     try:
-                        carId = href.split("/")[-1][-5:]
-
+                        carId = href
                         dateScraped = date.today()
                         carBrand = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text.split()[0]
                         carModel = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text.split()[1]
@@ -45,8 +44,8 @@ class CarbinWebscraper:
                         fuelType = self.driver.find_element(By.XPATH, "//img[contains(@src, '/_ipx/_/images/diesel.png')]/../span[@class='tab-content__svg__title']").text.strip()
                         # engineSize = self.driver.find_element(By.XPATH, "//div[@itemprop = 'description']/div[7]/p")
                         carMileage = self.driver.find_element(by=By.XPATH,value="//div[@class='main-details__tags flex wrap']/span[3]").text
-                        carColour = self.driver.find_element(By.XPATH, "//div[@itemprop = 'description']/div[4]/p")
-                        # carBrand = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text.sp;lit()[0]
+                        carColour = self.driver.find_element(By.XPATH, "//div[@itemprop = 'description']/div[4]/p").text
+                        carLocation = self.driver.find_element(By.XPATH, "//div[@class = 'main-details']/p").text.split(" ")[0]
 
                         yearOfManufacture = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text
                         year_pattern = r'\b\d{4}\b'
@@ -62,7 +61,7 @@ class CarbinWebscraper:
                             "Car Id" : carId, "Scraped Date":dateScraped,
                             "Brand": carBrand, "Model": carModel,
                             "Condition": carCondition, "Year": carYear, "Transmission": transmissionType,
-                            "Fuel":fuelType, "Colour":carColour, "Mileage":carMileage, "Price": Price}
+                            "Fuel":fuelType, "Colour":carColour,"Location":carLocation, "Mileage":carMileage, "Price": Price}
 
                         # Append all car details
                         self.allCars45Details.append(CarDetails)
@@ -109,7 +108,7 @@ class CarbinWebscraper:
                     try:
                         self.driver.get(href)
 
-                        carId = href.split("-")[-1]
+                        carId = href
                         dateScraped = date.today()
                         carBrand = self.driver.find_element(By.XPATH, "//*[@class='MuiTypography-root MuiTypography-h6 css-1g399u0']").text.split()[1]
                         carModel = self.driver.find_element(By.XPATH, "//*[@class='MuiTypography-root MuiTypography-h6 css-1g399u0']").text.split(maxsplit=2)[2]
@@ -123,12 +122,13 @@ class CarbinWebscraper:
                         fuelType = otherCarFeatures[2].text
                         carColour = otherCarFeatures[4].text
                         carMileage = self.driver.find_element(By.XPATH, "//*[@class='MuiGrid-root MuiGrid-container MuiGrid-spacing-xs-1 css-tuxzvu']").text.split('\n')[1]
+                        carLocation = self.driver.find_element(By.XPATH, "//div[@id = 'state-city']/span[2]").text.split(",")[0]
 
                         carDetails = {
                             "Car Id":carId, "Scraped Date":dateScraped,
                             "Brand": carBrand, "Model": carModel, "Condition": Condition,
                             "Year": yearOfManufacture, "Transmission": carTransmission, "Fuel":fuelType,
-                            "Colour":carColour, "Mileage":carMileage, "Price": Price
+                            "Colour":carColour, "Location":carLocation, "Mileage":carMileage, "Price": Price
                         }
 
 
@@ -202,7 +202,7 @@ class CarbinWebscraper:
                             "Car Id":carId, "Scraped Date" : dateScraped,
                             "Brand": carBrand, "Model": carModel, "Condition": carCondition(carTitle),
                             "Year": Year, "Transmission": carTransmission, "Fuel":fuelType,
-                            "Colour":carColour, "Mileage": carMileage, "Price": Price
+                            "Colour":carColour,"Location":"Lagos", "Mileage": carMileage, "Price": Price
                         }
 
                         self.betaCarsDetails.append(carDetails)
