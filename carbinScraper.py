@@ -45,6 +45,15 @@ class CarbinWebscraper:
                         fuelType = self.driver.find_element(By.XPATH, "//img[contains(@src, '/_ipx/_/images/diesel.png')]/../span[@class='tab-content__svg__title']").text.strip()
                         
                         engineSize = self.driver.find_element(By.XPATH, "//div[@itemprop = 'description']/div[7]/p").text
+                        # Check if engineSize contains only alphabetic characters
+                        if re.match(r'^[a-zA-Z]+$', engineSize):
+                            # If engineSize contains only alphabetic characters, replace it with "0"
+                            searchEngineSizeRed = "0"
+                        else:
+                            # Otherwise, keep the original value of engineSize
+                            searchEngineSizeRed = engineSize  
+                                                  
+                        # engineType = ["V4" if int(engineSize) <= 2800 else "V6" if int(engineSize) <= 3000 or int(engineSize) <= 3500 else "V8"]
                     
                         try:
                             carMileage = self.driver.find_element(By.XPATH, "//div[@class='main-details__tags flex wrap']/span[3]").text
@@ -52,7 +61,7 @@ class CarbinWebscraper:
                             carMileage = "0 km"
 
                         carColour = self.driver.find_element(By.XPATH, "//h1[@itemprop = 'name']").text.split()[-1]
-                        carLocation = self.driver.find_element(By.XPATH, "//div[@class = 'main-details']/p").text.split(" ")[0]
+                        carLocation = self.driver.find_element(By.XPATH, "//div[@class = 'main-details']/p").text.split(",")[0].strip()
 
                         
                         yearOfManufacture = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text
@@ -70,7 +79,7 @@ class CarbinWebscraper:
                             "Car Id" : carId, "Scraped Date":dateScraped,
                             "Brand": carBrand, "Model": carModel,
                             "Condition": carCondition, "Year": carYear, "Transmission": transmissionType,
-                            "Fuel":fuelType, "Colour":carColour,"Location":carLocation, "Mileage":carMileage, "Price": Price}
+                            "Fuel":fuelType, "Colour":carColour,"Location":carLocation, "Mileage":carMileage,"Engine Type":searchEngineSizeRed, "Price": Price}
                         
 
                         # Append all car details
@@ -133,12 +142,15 @@ class CarbinWebscraper:
                         carColour = otherCarFeatures[4].text
                         carMileage = self.driver.find_element(By.XPATH, "//*[@class='MuiGrid-root MuiGrid-container MuiGrid-spacing-xs-1 css-tuxzvu']").text.split('\n')[1]
                         carLocation = self.driver.find_element(By.XPATH, "//div[@id = 'state-city']/span[2]").text.split(",")[0]
+                        engineType = self.driver.find_element(By.XPATH, "//p[@class='MuiTypography-root MuiTypography-body1 css-1pldev7']").text
+                        engineSize = "V4" if "4" in engineType else "V6" if "6" in engineType else "V8"
+
 
                         carDetails = {
                             "Car Id":carId, "Scraped Date":dateScraped,
                             "Brand": carBrand, "Model": carModel, "Condition": Condition,
                             "Year": yearOfManufacture, "Transmission": carTransmission, "Fuel":fuelType,
-                            "Colour":carColour, "Location":carLocation, "Mileage":carMileage, "Price": Price
+                            "Colour":carColour, "Location":carLocation, "Mileage":carMileage, "Engine Type":engineSize, "Price": Price
                         }
 
 
@@ -204,6 +216,9 @@ class CarbinWebscraper:
                         carMileage = res[3]
                         carColour = res[6]
                         
+                        engineType = self.driver.find_element(By.XPATH, "//*[@id='quickTab-default']/div/table/tbody/tr[1]/td[2]").text
+                        engineSize = "V4" if "4" in engineType else "V6" if "6" in engineType else "V8"
+                        
                         Price = self.driver.find_element(by=By.XPATH, value="//div[@class='product-price']/span[1]").text.strip("₦ ")
                         # carId = f"BCars{carMileage[:3].replace(',','')}"
 
@@ -212,7 +227,7 @@ class CarbinWebscraper:
                             "Car Id":carId, "Scraped Date" : dateScraped,
                             "Brand": carBrand, "Model": carModel, "Condition": carCondition(carTitle),
                             "Year": Year, "Transmission": carTransmission, "Fuel":fuelType,
-                            "Colour":carColour,"Location":"Lagos", "Mileage": carMileage, "Price": Price
+                            "Colour":carColour,"Location":"Lagos", "Mileage": carMileage, "Engine Type":engineSize, "Price": Price
                         }
 
                         self.betaCarsDetails.append(carDetails)
@@ -244,16 +259,18 @@ class CarbinWebscraper:
     def concatenateDataframes(self, file_path, folder_id):
         try:
             # Call each scraping method to get the individual DataFrames
+
             df_cars45 = self.scrapeCars45(100)
-            df_autoChek = self.scrapeAutoChek(100)
+            df_autoChek = self.scrapeAutoChek(100) 
             df_betaCars = self.betaCars(20)
+            
 
             # Concatenate the individual DataFrames into one
 
             combinedDf = pd.concat([df_cars45, df_autoChek, df_betaCars], ignore_index=True,axis=0)
-            # combinedDf = (combinedDf)
-            joinedDf = pd.DataFrame(combinedDf)
-            joinedDf.to_csv("scrappedCars.csv")
+            # combinedDf = self.scrapeCars45(1)
+            # joinedDf = pd.DataFrame(combinedDf)
+            combinedDf.to_csv("scrappedCars.csv")
             
             # Authenticate with Google Drive
             gauth = GoogleAuth()
@@ -263,8 +280,11 @@ class CarbinWebscraper:
 
             drive = GoogleDrive(gauth)
             
-            # Get the file name from the file path
-            # file_name = file_path
+            # Check if file with the same name exists in Google Drive folder
+            file_list = drive.ListFile({'q': f"title='{file_path}' and '{folder_id}' in parents and trashed=false"}).GetList()
+            for file in file_list:
+                if file['title'] == file_path:
+                    file.Delete()  # Delete existing file
             
             # # Create a file in Google Drive
             file_drive = drive.CreateFile({'title': file_path, 'parents': [{'id': folder_id}]})
@@ -282,12 +302,12 @@ class CarbinWebscraper:
         except Exception as e:
             print(f"An error occurred: {e}")
 
-        finally:
-            # Close the WebDriver
-            self.driver.quit()
+        # finally:
+        #     # Close the WebDriver
+        #     self.driver.quit()
 
 
 scraper = CarbinWebscraper()
-# combined_data = scraper.betaCars(1)
+# combined_data = scraper.scrapeCars45(1)
 combined_data = scraper.concatenateDataframes('scrappedCars.csv', '1s_Z07EFdk4rTT5ExnrhX1LFUkxHnLXYV')
 print(combined_data)
