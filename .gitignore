@@ -1,5 +1,1 @@
-./scrappedCars.json
-./carbinCars.json
-./test.py
-./.ipynb_checkpoints
-./.idea
+client_secrets.json

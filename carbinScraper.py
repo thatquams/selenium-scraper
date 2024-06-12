@@ -4,7 +4,8 @@ from selenium.common.exceptions import NoSuchElementException
 from datetime import date
 import pandas as pd
 import re
-
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 
 
 class CarbinWebscraper:
@@ -42,11 +43,18 @@ class CarbinWebscraper:
                         carCondition = self.driver.find_element(By.XPATH,"//div[@class='main-details__tags flex wrap']/span[1]").text
                         transmissionType = self.driver.find_element(By.XPATH,"//div[@class='main-details__tags flex wrap']/span[2]").text
                         fuelType = self.driver.find_element(By.XPATH, "//img[contains(@src, '/_ipx/_/images/diesel.png')]/../span[@class='tab-content__svg__title']").text.strip()
-                        # engineSize = self.driver.find_element(By.XPATH, "//div[@itemprop = 'description']/div[7]/p")
-                        carMileage = self.driver.find_element(by=By.XPATH,value="//div[@class='main-details__tags flex wrap']/span[3]").text
-                        carColour = self.driver.find_element(By.XPATH, "//div[@itemprop = 'description']/div[4]/p").text
+                        
+                        engineSize = self.driver.find_element(By.XPATH, "//div[@itemprop = 'description']/div[7]/p").text
+                    
+                        try:
+                            carMileage = self.driver.find_element(By.XPATH, "//div[@class='main-details__tags flex wrap']/span[3]").text
+                        except NoSuchElementException:
+                            carMileage = "0 km"
+
+                        carColour = self.driver.find_element(By.XPATH, "//h1[@itemprop = 'name']").text.split()[-1]
                         carLocation = self.driver.find_element(By.XPATH, "//div[@class = 'main-details']/p").text.split(" ")[0]
 
+                        
                         yearOfManufacture = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text
                         year_pattern = r'\b\d{4}\b'
 
@@ -55,6 +63,7 @@ class CarbinWebscraper:
                         carYear = year_match.group()
 
                         Price = self.driver.find_element(By.XPATH, "//div[@class='main-details__name']/h5").text.strip("₦ ")
+                        
 
                         # Create a dictionary to store the scraped data
                         CarDetails = {
@@ -62,6 +71,7 @@ class CarbinWebscraper:
                             "Brand": carBrand, "Model": carModel,
                             "Condition": carCondition, "Year": carYear, "Transmission": transmissionType,
                             "Fuel":fuelType, "Colour":carColour,"Location":carLocation, "Mileage":carMileage, "Price": Price}
+                        
 
                         # Append all car details
                         self.allCars45Details.append(CarDetails)
@@ -164,7 +174,7 @@ class CarbinWebscraper:
     def betaCars(self, maxPageNumber):
 
         try:
-            betaCarsWebsite = "https://www.betacar.ng/all-used-cars#/pageSize=32&viewMode=grid&orderBy=10&pageNumber=1"
+            betaCarsWebsite = "https://www.betacar.ng/all-used-cars#/pageSize=32&orderBy=10&pageNumber=1"
             currentPageNumber = 1
 
             while currentPageNumber <= maxPageNumber:
@@ -231,7 +241,7 @@ class CarbinWebscraper:
         #     # Close the WebDriver
         #     self.driver.quit()
 
-    def concatenateDataframes(self):
+    def concatenateDataframes(self, file_path, folder_id):
         try:
             # Call each scraping method to get the individual DataFrames
             df_cars45 = self.scrapeCars45(100)
@@ -241,7 +251,32 @@ class CarbinWebscraper:
             # Concatenate the individual DataFrames into one
 
             combinedDf = pd.concat([df_cars45, df_autoChek, df_betaCars], ignore_index=True,axis=0)
-            combinedDf.to_csv("scrappedCars.csv")
+            # combinedDf = (combinedDf)
+            joinedDf = pd.DataFrame(combinedDf)
+            joinedDf.to_csv("scrappedCars.csv")
+            
+            # Authenticate with Google Drive
+            gauth = GoogleAuth()
+            gauth.LocalWebserverAuth()
+            
+            gauth.DEFAULT_SETTINGS['client_config_file'] = 'client_secrets.json'
+
+            drive = GoogleDrive(gauth)
+            
+            # Get the file name from the file path
+            # file_name = file_path
+            
+            # # Create a file in Google Drive
+            file_drive = drive.CreateFile({'title': file_path, 'parents': [{'id': folder_id}]})
+            
+            # Set the content of the file
+            file_drive.SetContentFile(file_path)
+            
+            # Upload the file to Google Drive
+            file_drive.Upload()
+            
+            print(f"File '{file_path}' uploaded successfully to Google Drive.")
+            
             return combinedDf
 
         except Exception as e:
@@ -253,5 +288,6 @@ class CarbinWebscraper:
 
 
 scraper = CarbinWebscraper()
-combined_data = scraper.concatenateDataframes()
+# combined_data = scraper.betaCars(1)
+combined_data = scraper.concatenateDataframes('scrappedCars.csv', '1s_Z07EFdk4rTT5ExnrhX1LFUkxHnLXYV')
 print(combined_data)
