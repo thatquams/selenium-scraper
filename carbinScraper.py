@@ -44,14 +44,20 @@ class CarbinWebscraper:
                         transmissionType = self.driver.find_element(By.XPATH,"//div[@class='main-details__tags flex wrap']/span[2]").text
                         fuelType = self.driver.find_element(By.XPATH, "//img[contains(@src, '/_ipx/_/images/diesel.png')]/../span[@class='tab-content__svg__title']").text.strip()
                         
-                        engineSize = self.driver.find_element(By.XPATH, "//div[@itemprop = 'description']/div[7]/p").text
+                        # engineSize = self.driver.find_element(By.XPATH, "//div[@itemprop = 'description']/div[7]/p").text
+                        enginSizeSpanElement = self.driver.find_element(By.XPATH, "//div[@itemprop='description']//span[normalize-space()='Engine Size']")
+
+                        # Navigate to the preceding sibling p tag to extract the engine size value
+                        engineSize = enginSizeSpanElement.find_element(By.XPATH, "./preceding-sibling::p").text.strip()
+
+
                         # Check if engineSize contains only alphabetic characters
                         if re.match(r'^[a-zA-Z]+$', engineSize):
                             # If engineSize contains only alphabetic characters, replace it with "0"
                             searchEngineSizeRed = "0"
                         else:
                             # Otherwise, keep the original value of engineSize
-                            searchEngineSizeRed = engineSize  
+                            searchEngineSizeRed = ["V4" if int(engineSize) <= 2800 else "V6" if int(engineSize) <= 3000 or int(engineSize) <= 3500 else "V8"]  
                                                   
                         # engineType = ["V4" if int(engineSize) <= 2800 else "V6" if int(engineSize) <= 3000 or int(engineSize) <= 3500 else "V8"]
                     
@@ -280,11 +286,11 @@ class CarbinWebscraper:
 
             drive = GoogleDrive(gauth)
             
-            # Check if file with the same name exists in Google Drive folder
-            file_list = drive.ListFile({'q': f"title='{file_path}' and '{folder_id}' in parents and trashed=false"}).GetList()
-            for file in file_list:
-                if file['title'] == file_path:
-                    file.Delete()  # Delete existing file
+            # # Check if file with the same name exists in Google Drive folder
+            # file_list = drive.ListFile({'q': f"title='{file_path}' and '{folder_id}' in parents and trashed=false"}).GetList()
+            # for file in file_list:
+            #     if file['title'] == file_path:
+            #         file.Delete()  # Delete existing file
             
             # # Create a file in Google Drive
             file_drive = drive.CreateFile({'title': file_path, 'parents': [{'id': folder_id}]})
