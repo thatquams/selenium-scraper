@@ -39,6 +39,10 @@ class CarbinWebscraper:
                         carId = href
                         dateScraped = date.today()
                         carBrand = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text.split()[0]
+                        modelElement = self.driver.find_element(By.XPATH, "//div[@itemprop='description']//span[normalize-space()='Model']")
+                        # Navigate to the preceding sibling p tag to extract the engine size value
+                        carModel = modelElement.find_element(By.XPATH, "./preceding-sibling::p").text.strip()
+
                         carModel = self.driver.find_element(By.XPATH, "//h1[@itemprop='name']").text.split()[1]
                         carCondition = self.driver.find_element(By.XPATH,"//div[@class='main-details__tags flex wrap']/span[1]").text
                         transmissionType = self.driver.find_element(By.XPATH,"//div[@class='main-details__tags flex wrap']/span[2]").text
@@ -57,7 +61,7 @@ class CarbinWebscraper:
                             searchEngineSizeRed = "0"
                         else:
                             # Otherwise, keep the original value of engineSize
-                            searchEngineSizeRed = ["V4" if int(engineSize) <= 2800 else "V6" if int(engineSize) <= 3000 or int(engineSize) <= 3500 else "V8"]  
+                            searchEngineSizeRed = "V4" if int(engineSize) <= 2800 else "V6" if int(engineSize) <= 3000 or int(engineSize) <= 3500 else "V8"
                                                   
                         # engineType = ["V4" if int(engineSize) <= 2800 else "V6" if int(engineSize) <= 3000 or int(engineSize) <= 3500 else "V8"]
                     
@@ -315,5 +319,5 @@ class CarbinWebscraper:
 
 scraper = CarbinWebscraper()
 # combined_data = scraper.scrapeCars45(1)
-combined_data = scraper.concatenateDataframes('scrappedCars.csv', '1s_Z07EFdk4rTT5ExnrhX1LFUkxHnLXYV')
+combined_data = scraper.concatenateDataframes('newscrappedCars.csv', '1s_Z07EFdk4rTT5ExnrhX1LFUkxHnLXYV')
 print(combined_data)
