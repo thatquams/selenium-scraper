@@ -269,7 +269,7 @@ class CarbinWebscraper:
     def concatenateDataframes(self, file_path, folder_id):
         try:
             # Call each scraping method to get the individual DataFrames
-
+            
             df_cars45 = self.scrapeCars45(100)
             df_autoChek = self.scrapeAutoChek(100) 
             df_betaCars = self.betaCars(20)
@@ -278,7 +278,6 @@ class CarbinWebscraper:
             # Concatenate the individual DataFrames into one
 
             combinedDf = pd.concat([df_cars45, df_autoChek, df_betaCars], ignore_index=True,axis=0)
-            # combinedDf = self.scrapeCars45(1)
             # joinedDf = pd.DataFrame(combinedDf)
             combinedDf.to_csv("scrappedCars.csv")
             
@@ -291,10 +290,10 @@ class CarbinWebscraper:
             drive = GoogleDrive(gauth)
             
             # # Check if file with the same name exists in Google Drive folder
-            # file_list = drive.ListFile({'q': f"title='{file_path}' and '{folder_id}' in parents and trashed=false"}).GetList()
-            # for file in file_list:
-            #     if file['title'] == file_path:
-            #         file.Delete()  # Delete existing file
+            file_list = drive.ListFile({'q': f"title='{file_path}' and '{folder_id}' in parents and trashed=false"}).GetList()
+            for file in file_list:
+                if file['title'] == file_path:
+                    file.Delete()  # Delete existing file
             
             # # Create a file in Google Drive
             file_drive = drive.CreateFile({'title': file_path, 'parents': [{'id': folder_id}]})
@@ -319,5 +318,5 @@ class CarbinWebscraper:
 
 scraper = CarbinWebscraper()
 # combined_data = scraper.scrapeCars45(1)
-combined_data = scraper.concatenateDataframes('newscrappedCars.csv', '1s_Z07EFdk4rTT5ExnrhX1LFUkxHnLXYV')
+combined_data = scraper.concatenateDataframes('scrappedCars.csv', '1s_Z07EFdk4rTT5ExnrhX1LFUkxHnLXYV')
 print(combined_data)
