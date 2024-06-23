@@ -290,10 +290,10 @@ class CarbinWebscraper:
             drive = GoogleDrive(gauth)
             
             # # Check if file with the same name exists in Google Drive folder
-            file_list = drive.ListFile({'q': f"title='{file_path}' and '{folder_id}' in parents and trashed=false"}).GetList()
-            for file in file_list:
-                if file['title'] == file_path:
-                    file.Delete()  # Delete existing file
+            # file_list = drive.ListFile({'q': f"title='{file_path}' and '{folder_id}' in parents and trashed=false"}).GetList()
+            # for file in file_list:
+            #     if file['title'] == file_path:
+            #         file.Delete()  # Delete existing file
             
             # # Create a file in Google Drive
             file_drive = drive.CreateFile({'title': file_path, 'parents': [{'id': folder_id}]})
