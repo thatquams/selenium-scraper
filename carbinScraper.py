@@ -61,7 +61,7 @@ class CarbinWebscraper:
                             searchEngineSizeRed = "0"
                         else:
                             # Otherwise, keep the original value of engineSize
-                            searchEngineSizeRed = "V4" if int(engineSize) <= 2800 else "V6" if int(engineSize) <= 3000 or int(engineSize) <= 3500 else "V8"
+                            searchEngineSizeRed = "4-Cylinder" if int(engineSize) <= 2800 else "6-Cylinder" if int(engineSize) <= 3000 or int(engineSize) <= 3500 else "8-Cylinder"
                                                   
                         # engineType = ["V4" if int(engineSize) <= 2800 else "V6" if int(engineSize) <= 3000 or int(engineSize) <= 3500 else "V8"]
                     
@@ -153,7 +153,7 @@ class CarbinWebscraper:
                         carMileage = self.driver.find_element(By.XPATH, "//*[@class='MuiGrid-root MuiGrid-container MuiGrid-spacing-xs-1 css-tuxzvu']").text.split('\n')[1]
                         carLocation = self.driver.find_element(By.XPATH, "//div[@id = 'state-city']/span[2]").text.split(",")[0]
                         engineType = self.driver.find_element(By.XPATH, "//p[@class='MuiTypography-root MuiTypography-body1 css-1pldev7']").text
-                        engineSize = "V4" if "4" in engineType else "V6" if "6" in engineType else "V8"
+                        engineSize = "4-Cylinder" if "4" in engineType else "6-Cylinder" if "6" in engineType else "8-Cylinder"
 
 
                         carDetails = {
@@ -227,7 +227,7 @@ class CarbinWebscraper:
                         carColour = res[6]
                         
                         engineType = self.driver.find_element(By.XPATH, "//*[@id='quickTab-default']/div/table/tbody/tr[1]/td[2]").text
-                        engineSize = "V4" if "4" in engineType else "V6" if "6" in engineType else "V8"
+                        engineSize = "4-Cylinder" if "4" in engineType else "6-Cylinder" if "6" in engineType else "8-Cylinder"
                         
                         Price = self.driver.find_element(by=By.XPATH, value="//div[@class='product-price']/span[1]").text.strip("₦ ")
                         # carId = f"BCars{carMileage[:3].replace(',','')}"
